@@ -12,7 +12,8 @@ const getById = async (req,res) =>{
 }
 
 const getPage = async (req,res) =>{
-    const response = await deloService.deloGetDocumentsPage();
+    const documentsAmount = req.query.documentsAmount;
+    const response = await deloService.deloGetDocumentsPage(documentsAmount);
     console.log(`Response status of getDocumentsPage request: ${response?.status}`)
     if(response?.status === undefined)
         res.status(200).json({message: "Succeed to get documents page!", result: response})

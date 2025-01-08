@@ -66,11 +66,11 @@ const GetDocumentsById = async(isnDoc) =>{
 
     return await makePostRequest(fullApiPath, {query}, "GetDocsById");
 }
-const GetDocumentsPage = async() =>{
+const GetDocumentsPage = async(documentsAmount) =>{
     const fullApiPath = deloServerConfig['baseURL'] + "/CoreHost/gql/query/";
     const query = `
         query {
-            docRcsPg(first: 10, after: null) {
+            docRcsPg(first: ${documentsAmount}, after: null) {
                 items {
                     isnDoc
                     docDate
