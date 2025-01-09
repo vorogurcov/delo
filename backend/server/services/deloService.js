@@ -29,11 +29,11 @@ const makePostRequest = async (path, data, operationName) =>{
         if (error.response) {
             console.error("Response Status:", error.response.status);
             console.error("Response Data:", error.response.data);
-        } else if (error.request) {
-            console.error("No Response Received:", error.request);
-        } else {
-            console.error("Request Error:", error.message);
         }
+        if (error.request) {
+            console.error("No Response Received:", error.request);
+        }
+        console.error("Request Error:", error.message);
         return error;
     }
 }

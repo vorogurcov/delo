@@ -6,7 +6,6 @@ import cookieParser from 'cookie-parser';
 import authRoute from './routes/authRoute.js';
 import deloDocumentsRoute from "./routes/deloDocumentsRoute.js";
 
-
 const app = express();
 app.use(cookieParser());
 app.use('/authentication',authRoute);
