@@ -1,8 +1,10 @@
-require('dotenv').config({path: "./config/.env"});;
-const express = require("express");
-const cookieParser = require("cookie-parser");
-const authRoute = require("./routes/authRoute.js");
-const deloDocumentsRoute = require("./routes/deloDocumentsRoute.js");
+import dotenv from 'dotenv';
+dotenv.config({path: './config/.env'});
+
+import express from 'express';
+import cookieParser from 'cookie-parser';
+import authRoute from './routes/authRoute.js';
+import deloDocumentsRoute from "./routes/deloDocumentsRoute.js";
 
 
 const app = express();

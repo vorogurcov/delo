@@ -1,10 +1,9 @@
-const express = require('express')
-const documentsController = require("../controllers/documentsController.js")
-
+import express from 'express';
+import {docsGetById, docsGetPage} from "../controllers/documentsController.js";
 const deloDocumentsRoute = express.Router();
 
-deloDocumentsRoute.post('/getById',documentsController.getById);
+deloDocumentsRoute.post('/getById',docsGetById);
 
-deloDocumentsRoute.post('/getPage', documentsController.getPage);
+deloDocumentsRoute.post('/getPage', docsGetPage);
 
-module.exports = deloDocumentsRoute;
+export default deloDocumentsRoute;

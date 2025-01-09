@@ -1,13 +1,14 @@
-const axios = require("axios");
-const deloServerConfig = require("../config/deloServerConfig.js")
+import axios from 'axios';
+import getDeloConfig from "../config/deloServerConfig.js";
 
+let deloConfig = undefined;
 let sessionCookies = {};
 const makePostRequest = async (path, data, operationName) =>{
     try {
         console.log("Making POST request to:", path);
         console.log("\nRequest Data:", data);
 
-        const cookies = sessionCookies?.[deloServerConfig['user_login']];
+        const cookies = sessionCookies?.[deloConfig['user_login']];
 
         const result = await axios.post(path, data, {
             withCredentials: true,
@@ -20,7 +21,7 @@ const makePostRequest = async (path, data, operationName) =>{
 
         if(Object.keys(sessionCookies).length === 0) {
             const cookies = result.headers['set-cookie'];
-            sessionCookies[deloServerConfig['user_login']] = cookies;
+            sessionCookies[deloConfig['user_login']] = cookies;
         }
         console.log(`${operationName} Successful:`, result.data);
         return result.data;
@@ -36,26 +37,35 @@ const makePostRequest = async (path, data, operationName) =>{
         return error;
     }
 }
-const Login = async () => {
-    const fullLoginPath = deloServerConfig['baseURL'] + "/CoreHost/identity/api/login";
+export const deloLogin = async () => {
+    if(deloConfig === undefined)
+        deloConfig = getDeloConfig();
+
+    const fullLoginPath = deloConfig['baseURL'] + "/CoreHost/identity/api/login";
     const data =
         {
-            user: deloServerConfig['user_login'],
-            password: deloServerConfig['user_password']
+            user: deloConfig['user_login'],
+            password: deloConfig['user_password']
         };
 
     return await makePostRequest(fullLoginPath,data,"Login");
 };
-const Logout = async () => {
-    const fullLogoutPath = deloServerConfig['baseURL'] + "/CoreHost/identity/api/logout";
+export const deloLogout = async () => {
+    if(deloConfig === undefined)
+        deloConfig = getDeloConfig();
+
+    const fullLogoutPath = deloConfig['baseURL'] + "/CoreHost/identity/api/logout";
     const data = {}
 
     const response = await makePostRequest(fullLogoutPath,data,"Logout");
     sessionCookies = {};
     return response;
 };
-const GetDocumentsById = async(isnDoc) =>{
-    const fullApiPath = deloServerConfig['baseURL'] + "/CoreHost/gql/query/";
+export const deloGetDocumentsById = async(isnDoc) =>{
+    if(deloConfig === undefined)
+        deloConfig = getDeloConfig();
+
+    const fullApiPath = deloConfig['baseURL'] + "/CoreHost/gql/query/";
     const query = `
         query {
             getDocRc(isnDoc: ${isnDoc}) {
@@ -66,8 +76,11 @@ const GetDocumentsById = async(isnDoc) =>{
 
     return await makePostRequest(fullApiPath, {query}, "GetDocsById");
 }
-const GetDocumentsPage = async(documentsAmount) =>{
-    const fullApiPath = deloServerConfig['baseURL'] + "/CoreHost/gql/query/";
+export const deloGetDocumentsPage = async(documentsAmount) =>{
+    if(deloConfig === undefined)
+        deloConfig = getDeloConfig();
+
+    const fullApiPath = deloConfig['baseURL'] + "/CoreHost/gql/query/";
     const query = `
         query {
             docRcsPg(first: ${documentsAmount}, after: null) {
@@ -80,8 +93,3 @@ const GetDocumentsPage = async(documentsAmount) =>{
     `;
     return await makePostRequest(fullApiPath, {query},'GetDocsPage')
 }
-
-module.exports.deloLogin = Login;
-module.exports.deloLogout = Logout;
-module.exports.deloGetDocumentsById = GetDocumentsById;
-module.exports.deloGetDocumentsPage = GetDocumentsPage;

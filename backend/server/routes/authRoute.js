@@ -1,9 +1,10 @@
-const express = require('express')
-const auth = require('../controllers/authController.js');
+import express from 'express';
+import {loginToDelo, logoutFromDelo} from "../controllers/authController.js";
+
 const authRoute = express.Router();
 
-authRoute.post('/login',auth.loginToDelo);
+authRoute.post('/login',loginToDelo);
 
-authRoute.post('/logout',auth.logoutFromDelo);
+authRoute.post('/logout',logoutFromDelo);
 
-module.exports = authRoute;
+export default authRoute;
