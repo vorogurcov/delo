@@ -1,4 +1,4 @@
-import {deloGetDocumentsById, deloGetDocumentsPage} from '../services/deloService.js'
+import {deloGetDocumentsById, deloGetDocumentsPage, deloAddDocument} from '../services/deloService.js'
 export const docsGetById = async (req,res) =>{
     const isnDoc = req.query.isnDoc;
     const response = await deloGetDocumentsById(isnDoc);
@@ -13,6 +13,17 @@ export const docsGetById = async (req,res) =>{
 export const docsGetPage = async (req,res) =>{
     const documentsAmount = req.query.documentsAmount;
     const response = await deloGetDocumentsPage(documentsAmount);
+    console.log(`Response status of getDocumentsPage request: ${response?.status}`)
+    if(response?.status === undefined)
+        res.status(200).json({message: "Succeed to get documents page!", result: response})
+    else
+        res.status(500).json({message: "Failed to get documents page!", result: response})
+}
+
+export const docCreate = async (req,res) =>{
+    const { docClassifName, kindDoc, securlevel, corespName, isnDelivery, deloClassifName } = req.query;
+
+    const response = await deloAddDocument(docClassifName, kindDoc, securlevel, corespName, isnDelivery, deloClassifName);
     console.log(`Response status of getDocumentsPage request: ${response?.status}`)
     if(response?.status === undefined)
         res.status(200).json({message: "Succeed to get documents page!", result: response})

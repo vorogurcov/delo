@@ -73,7 +73,7 @@ export const deloGetDocumentsById = async(isnDoc) =>{
                 docDate
             }   
         }`;
-
+    await getDueDocgroup("Общие");
     return await makePostRequest(fullApiPath, {query}, "GetDocsById");
 }
 export const deloGetDocumentsPage = async(documentsAmount) =>{
@@ -93,3 +93,122 @@ export const deloGetDocumentsPage = async(documentsAmount) =>{
     `;
     return await makePostRequest(fullApiPath, {query},'GetDocsPage')
 }
+
+const getDueDocgroup = async(docClassifName) =>{
+    if(deloConfig === undefined)
+        deloConfig = getDeloConfig();
+
+    const fullApiPath = deloConfig['baseURL'] + "/CoreHost/gql/query/";
+    const query = `
+    query {
+      docgroupClsPg(filter: { classifName: {equal: {value:${docClassifName}} }}, first: 10000) {
+        items { 
+          due
+        }
+      }
+    }`
+    const result = await makePostRequest(fullApiPath, {query},'GetDocsPage')
+    return result['data']['docgroupClsPg']['items']?.[0]['due'];
+}
+
+const getIsnLclassif = async (classifName) =>{
+    if(deloConfig === undefined)
+        deloConfig = getDeloConfig();
+
+    const fullApiPath = deloConfig['baseURL'] + "/CoreHost/gql/query/";
+    const query = ` query{
+        nomenklClsPg(filter : {classifName: {equal: {value: ${classifName}}}},first:1000){
+            items{
+                isnLclassif
+            }
+        }
+    }`
+    const result = await makePostRequest(fullApiPath, {query},'getIsnLclassif')
+    return result['data']['nomenklClsPg']['items']?.[0]['isnLclassif'];
+
+}
+
+
+const getOrganizDueAndIsnNode = async (classifName) =>{
+    if(deloConfig === undefined)
+        deloConfig = getDeloConfig();
+
+    const fullApiPath = deloConfig['baseURL'] + "/CoreHost/gql/query/";
+    const query = `query{
+        organizClsPg(filter: { classifName: {equal: {value:${classifName} }}}, first: 2) {
+            items {
+                due
+                isnNode
+            }
+        }
+    }`
+
+    const result = await makePostRequest(fullApiPath, {query},'getOrganizDueAndIsnNode')
+    return [result['data']['organizClsPg']['items']?.[0]['due'],
+            result['data']['organizClsPg']['items']?.[0]['isnNode'] ];
+}
+
+const getIsnContact = async(isnOrganiz) =>{
+    if(deloConfig === undefined)
+        deloConfig = getDeloConfig();
+
+    const fullApiPath = deloConfig['baseURL'] + "/CoreHost/gql/query/";
+    const query = `query {
+        contactsPg(filter: { isnOrganiz: {equal: {value:${isnOrganiz}} }}, first: 2) {
+            items {
+                isnContact
+            }
+        }
+    }`
+
+    const result = await makePostRequest(fullApiPath, {query},'getOrganizDueAndIsnNode')
+    return result['data']['contactsPg']['items']?.[0]['isnContact'];
+}
+export const deloAddDocument = async(docClassifName, kindDoc, securlevel,corespName, isnDelivery, deloClassifName) =>{
+    if(deloConfig === undefined)
+        deloConfig = getDeloConfig();
+
+    const fullApiPath = deloConfig['baseURL'] + "/CoreHost/gql/query/";
+    const dueDocgroup = await getDueDocgroup(docClassifName);
+    const isnLclassif = await getIsnLclassif(deloClassifName)
+    const organiz = await getOrganizDueAndIsnNode(corespName);
+    const isnContact = await getIsnContact(organiz[1])
+
+
+    const query = `
+        mutation {
+          createDocRc(input: { 
+            clientMutationId: "11",
+            data: { 
+              kindDoc: ${kindDoc}, 
+              dueDocgroup: \"${dueDocgroup}\", 
+              securlevel: ${securlevel}, 
+              docDate: \"${new Date().toISOString().slice(0, -14)}\",
+              refCorresps: [
+                { 
+                  createRefCorresp: {
+                    dueOrganiz: \"${organiz[0]}\",
+                    isnContact: ${isnContact},
+                    correspKind:Correspondent
+                  }
+                }
+              ],
+              isnDelivery: ${isnDelivery},
+              nomenklCl:{
+                attachNomenklCl:{
+                  isnLclassif:${isnLclassif}
+                } 
+              }
+            }
+          }) {
+            success
+            message
+            messageCode
+            messageData
+            systemMessage
+            }
+        }`
+
+    return await makePostRequest(fullApiPath, {query}, 'AddDocument')
+}
+
