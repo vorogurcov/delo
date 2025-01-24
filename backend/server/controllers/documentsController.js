@@ -21,12 +21,14 @@ export const docsGetPage = async (req,res) =>{
 }
 
 export const docCreate = async (req,res) =>{
-    const { docClassifName, kindDoc, securlevel, corespName, isnDelivery, deloClassifName } = req.query;
+    const { docClassifName, kindDoc, securlevel, corespName, isnDelivery,
+        deloClassifName, addresseeSurname, addresseeDuty } = req.query;
 
-    const response = await deloAddDocument(docClassifName, kindDoc, securlevel, corespName, isnDelivery, deloClassifName);
-    console.log(`Response status of getDocumentsPage request: ${response?.status}`)
+    const response = await deloAddDocument(docClassifName, kindDoc, securlevel,
+        corespName, isnDelivery, deloClassifName, addresseeSurname, addresseeDuty);
+    console.log(`Response status of docCreate request: ${response?.status}`)
     if(response?.status === undefined)
-        res.status(200).json({message: "Succeed to get documents page!", result: response})
+        res.status(200).json({message: "Succeed to create document!", result: response})
     else
-        res.status(500).json({message: "Failed to get documents page!", result: response})
+        res.status(500).json({message: "Failed to create document!", result: response})
 }

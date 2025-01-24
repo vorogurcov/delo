@@ -164,7 +164,28 @@ const getIsnContact = async(isnOrganiz) =>{
     const result = await makePostRequest(fullApiPath, {query},'getOrganizDueAndIsnNode')
     return result['data']['contactsPg']['items']?.[0]['isnContact'];
 }
-export const deloAddDocument = async(docClassifName, kindDoc, securlevel,corespName, isnDelivery, deloClassifName) =>{
+
+const getAddresseeDue = async (addresseeSurname, addresseeDuty) =>{
+
+    if(deloConfig === undefined)
+        deloConfig = getDeloConfig();
+
+    const fullApiPath = deloConfig['baseURL'] + "/CoreHost/gql/query/";
+    const query = `
+    query{
+      departmentsPg(filter:{surname:{equal:{value:${addresseeSurname}}},
+            duty:{equal:{value:${addresseeDuty}}}}
+                ,first: 1000){
+                    items{
+                        due
+                    }
+        }
+    }`
+    const result = await makePostRequest(fullApiPath, {query},'getAddresseeDue')
+    return result['data']['departmentsPg']['items']?.[0]['due'];
+}
+export const deloAddDocument = async(docClassifName, kindDoc, securlevel,
+                                     corespName, isnDelivery, deloClassifName, addresseeSurname, addresseeDuty) =>{
     if(deloConfig === undefined)
         deloConfig = getDeloConfig();
 
@@ -173,7 +194,7 @@ export const deloAddDocument = async(docClassifName, kindDoc, securlevel,corespN
     const isnLclassif = await getIsnLclassif(deloClassifName)
     const organiz = await getOrganizDueAndIsnNode(corespName);
     const isnContact = await getIsnContact(organiz[1])
-
+    const addresseeDue = await getAddresseeDue(addresseeSurname,addresseeDuty);
 
     const query = `
         mutation {
@@ -197,8 +218,15 @@ export const deloAddDocument = async(docClassifName, kindDoc, securlevel,corespN
               nomenklCl:{
                 attachNomenklCl:{
                   isnLclassif:${isnLclassif}
-                } 
-              }
+                },
+                }
+                docWho:[
+                    {
+                      createDocWho:{
+                        duePerson:\"${addresseeDue}\"
+                      }
+                    }
+                  ] 
             }
           }) {
             success
