@@ -1,5 +1,9 @@
 import axios from 'axios';
 import getDeloConfig from "../config/deloServerConfig.js";
+import FormData from 'form-data';
+import fs from 'fs';
+import mime from 'mime-types'
+
 
 let deloConfig = undefined;
 let sessionCookies = {};
@@ -184,8 +188,48 @@ const getAddresseeDue = async (addresseeSurname, addresseeDuty) =>{
     const result = await makePostRequest(fullApiPath, {query},'getAddresseeDue')
     return result['data']['departmentsPg']['items']?.[0]['due'];
 }
+
+const uploadFileToFDULZ = async (fileName) => {
+
+    if (deloConfig === undefined)
+        deloConfig = getDeloConfig();
+
+    const fullApiPath = deloConfig['baseURL'] + "/CoreHost/fdulz/api/UploadFiles"; 
+    const filePath = "server/" + fileName;
+
+    const formData = new FormData();
+    formData.append('PostedFiles[]', fs.createReadStream(filePath), fileName);
+
+    try {
+        const response = await axios.post(fullApiPath, formData, {
+            headers: {
+                ...formData.getHeaders(),
+                'Cookie': sessionCookies?.[deloConfig['user_login']]?.join('; '),
+                'Accept': 'text/plain, */*; q=0.01',
+                'User-Agent': 'Node.js FormData Upload',
+                'X-Requested-With': 'XMLHttpRequest',
+                'Content-Disposition': `form-data; name="PostedFiles[]"; filename="${fileName}"`,
+            },
+            withCredentials: true,
+        });
+
+        console.log("Ответ сервера:", response.data);
+        return response.data.slice(0,-1)
+    } catch (error) {
+        console.log("DEBUG DEBUG DEBUG DEBUG DEBUG DEBUG")
+        console.log(error.message);
+        console.log(formData);
+        console.log(error.response);
+        console.log(error.response?.["data"]["errors"]);
+        console.log("DEBUG DEBUG DEBUG DEBUG DEBUG DEBUG")
+    }
+
+    return undefined;
+};
+
+
 export const deloAddDocument = async(docClassifName, kindDoc, securlevel,
-                                     corespName, isnDelivery, deloClassifName, addresseeSurname, addresseeDuty) =>{
+                                     corespName, isnDelivery, deloClassifName, addresseeSurname, addresseeDuty,filePath) =>{
     if(deloConfig === undefined)
         deloConfig = getDeloConfig();
 
@@ -195,6 +239,7 @@ export const deloAddDocument = async(docClassifName, kindDoc, securlevel,
     const organiz = await getOrganizDueAndIsnNode(corespName);
     const isnContact = await getIsnContact(organiz[1])
     const addresseeDue = await getAddresseeDue(addresseeSurname,addresseeDuty);
+    const fdulzID = await uploadFileToFDULZ(filePath) || filePath;
 
     const query = `
         mutation {
@@ -226,7 +271,15 @@ export const deloAddDocument = async(docClassifName, kindDoc, securlevel,
                         duePerson:\"${addresseeDue}\"
                       }
                     }
-                  ] 
+                  ],
+                refFiles:[
+                    {
+                      createRefFile:{
+                      contents: "fdulz#DeleteOnClose#${fdulzID}",
+                      description: \"${filePath}\"
+                      }
+                    }
+                    ]
             }
           }) {
             success
