@@ -1,4 +1,4 @@
-import {deloLogin, deloLogout} from "../services/deloService.js";
+import {deloLogin, deloLogout} from "../services/delo/deloAuthenticationService.js";
 
 export const loginToDelo = async (req,res) =>{
     const response = await deloLogin();

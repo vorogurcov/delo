@@ -1,4 +1,6 @@
-import {deloGetDocumentsById, deloGetDocumentsPage, deloAddDocument} from '../services/deloService.js'
+import {deloGetDocumentsById,deloGetDocumentsPage} from "../services/delo/deloGetDocumentService.js";
+import deloAddDocument from "../services/delo/deloCreateDocumentService.js";
+
 export const docsGetById = async (req,res) =>{
     const isnDoc = req.query.isnDoc;
     const response = await deloGetDocumentsById(isnDoc);
